@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Game Screen</title>
+    <style>
+      html,body{
+        width:100%;
+        height:100%;
+        margin:0;
+        padding:0;
+        font-family: arial;
+      }
+      
+      #output{
+        width:400px;
+        height:100%;
+        overflow-y: scroll;
+        background-color:#333;
+        color:#fff;
+        position: absolute;
+        top:0;
+        right:0;
+      }
+      
+      #game{
+        position: absolute;
+        background-color:#eee;
+        top:0;
+        left:0;
+        bottom:0;
+        right:400px;
+        
+      }
+      
+      
+    </style>
+  </head>
+  <body>
+    <div id="game">
+      
+    </div>
+    
+    <div id="output">
+      
+    </div>
+    
+    <!--SOCKET-->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      
+   
+      
+      var output = document.getElementById("output");
+      var players = [];
+      var game =  document.getElementById("game")
+      var canvas;
+      var context;
+      var screenWidth = 800;
+      var screenHeight = 600;
+      var backgroundColor = "#9ea7b8";
+      var playerHeight=50;
+      var playerWidth=50;
+      var speed = 10;
+      var fps = 60;
+     
+      
+      
+      
+      function debug(str){
+        output.innerHTML+=str+"</br>";
+      }
+      
+      function onResize() {
+        
+        screenHeight =  window.innerHeight
+        screenWidth = window.innerWidth-output.offsetWidth;
+        //console.log(output.offsetWidth)
+        
+      }
+      
+      
+      
+      window.addEventListener("resize", onResize);
+      
+      onResize();
+      
+      
+      canvas = document.createElement('canvas');
+      canvas.id = 'canvas';
+      canvas.width = screenWidth;
+      canvas.height = screenHeight;
+      // document.body.appendChild(canvas);
+      document.getElementById("game").appendChild(canvas);
+      
+      context = canvas.getContext('2d');
+      context.fillStyle = backgroundColor;
+      context.fillRect(0,0,screenWidth,screenHeight);
+      
+      
+      //########################################
+      //SOCKET
+      //########################################
+      var socket = io();
+     
+      //SEND SCREEN ID
+      var screenId = "screen1";
+      socket.emit('connect screen',{ screen: screenId});
+      
+      //ADD USER
+      socket.on('add user', function (data) {
+          debug("add user : "+data.username);
+          
+          var player = {};
+          player.id = data.id;
+          player.username = data.username;
+          player.color = data.color;
+          player.x = 0;
+          player.y = 0;
+          player.speed = speed;
+          player.moveup = false;
+          player.moveleft=  false;
+          player.moveright = false;
+          player.movedown=false;
+          players.push(player);
+          
+          
+      });
+      
+      //REMOVE USER
+      socket.on('remove user', function (data) {
+          debug("remove user : "+data.username);
+          var removePlayer = null;
+          for(var i = 0;i<players.length;i++){
+            if (players[i].id == data.id) {
+              removePlayer = i;
+            }
+          }
+          
+          if (removePlayer!=null) {
+            players.splice(removePlayer,1);
+            console.log(players)
+          }
+          
+      });
+      
+      
+      //UPDATE
+      socket.on("update",function(user,data){
+        //debug("update"+user.username+": up "+data.direction.up+"| down "+data.direction.down+"| left "+data.direction.left+"| right"+data.direction.right);
+        if (players.length>0) {
+          
+       
+          for(var i = 0;i<players.length;i++){
+            var player = players[i];
+            if (player.id == user.id) {
+              player.moveup = data.direction.up;
+              player.movedown = data.direction.down;
+              player.moveleft = data.direction.left;
+              player.moveright = data.direction.right;
+            }
+          }
+        }
+      })
+      
+      
+      var interval = setInterval(loop,1000/fps);
+      
+      function loop(args) {
+        
+        context.clearRect ( 0 , 0 , screenWidth, screenHeight );
+        context.fillStyle = backgroundColor;
+        context.fillRect(0,0,screenWidth,screenHeight);
+        
+        if (players.length>0) {
+         for(var i = 0;i<players.length;i++){
+          var player = players[i];
+          
+          //player.speed--;
+          if (player.speed<0) {
+            player.speed = 0;
+          }
+          
+          //UPDATE POSITION
+          if (player.moveright) {
+            player.x +=player.speed;
+          }else if (player.moveleft) {
+             player.x -=player.speed;
+          }else if (player.moveup) {
+            player.y -=player.speed;
+          }else if ( player.movedown) {
+            player.y +=player.speed;
+          }
+          
+          //COLLISION DETECTION
+          if (player.y<0) {
+            player.y =0;
+          }
+          if (player.y>screenHeight-playerHeight) {
+            player.y = screenHeight-playerHeight;
+          }
+          if (player.x>screenWidth-playerWidth) {
+            player.x = screenWidth-playerWidth;
+          }
+          if (player.x<0) {
+            player.x = 0;
+          }
+          
+          //DRAW
+          context.beginPath();
+          context.rect(players[i].x, players[i].y, playerWidth, playerHeight);
+          context.fillStyle = players[i].color;
+          context.fill();
+         }
+        }
+        
+      }
+      
+    </script>
+    
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+    "name": "WSExample",
+    "version": "0.0.1",
+    "description": "SocketioExample",
+    "dependencies": {
+        "socket.io": "latest",
+        "express":"latest"
+    },
+    "author": "wsvdmeer"
+}

@@ -1,0 +1,21 @@
+http://krasimirtsonev.com/blog/article/Real-time-chat-with-NodeJS-Socketio-and-ExpressJS
+http://socket.io/get-started/chat/
+
+1. Download and install http://nodejs.org/
+2. Create a project directory
+3. Create a package.json file :
+{
+    "name": "WSExample",
+    "version": "0.0.1",
+    "description": "SocketioExample",
+    "dependencies": {
+        "socket.io": "latest",
+ 	"express":"latest"
+    },
+    "author": "wsvdmeer"
+}
+
+4. Open cmd and go to your directory;
+5. Run npm install (installs the dependencies);
+6. create server.js
+

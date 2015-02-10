@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Game Screen</title>
+   
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"/>
+    <style>
+        *{
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        html,body{
+            font-family: arial;
+            width:100%;
+            height:100%;
+            margin:0;
+            padding:0;
+        }
+        #login{
+            background-color:#fff;
+            width:100%;
+            height:100%;
+            display: block;
+        }
+        #gamepad{
+            background-color:#fff;
+            width:100%;
+            height:100%;
+            display: none;
+            
+        }
+        
+        .button-holder{
+            width:240px;
+            height:240px;
+            display: block;
+            position: absolute;
+            top:50%;
+            left:50%;
+            margin-left:-120px;
+            margin-top:-120px;
+           
+        }
+        .gamepad-button{
+            position: absolute;
+            border-radius: 40px;
+            width:80px;
+            height:80px;
+            background-color:#000;
+            color:#fff;
+            text-align: center;
+            line-height: 80px;
+            display: block;
+        }
+        
+        #up,#down{
+            
+            left:50%;
+            margin-left:-40px;
+        }
+        
+         #left,#right{
+            
+            top:50%;
+            margin-top:-40px;
+        }
+        #up{
+            top:0;
+        }
+        #down{
+            bottom:0;
+        }
+        #left{
+            left:0;
+        }
+         #right{
+            right:0;
+        }
+        
+        
+    </style>   
+        
+  </head>
+  <body>
+    
+    <div id="login">
+        <input id="input" autocomplete="false" placeholder="username"/>
+        <button id="submit">submit</button>
+    </div>
+    <div id="gamepad">
+        <div class="button-holder">
+            <div class="gamepad-button" id="up">up</div>
+            <div class="gamepad-button" id="down">down</div>
+            <div class="gamepad-button"  id="left">left</div>
+            <div class="gamepad-button" id="right">right</div>
+        </div>
+    </div>
+    
+    
+    
+    
+    <!--SOCKET-->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        
+    //UI
+    var input = document.getElementById("input");
+    var button = document.getElementById("submit");
+    button.onclick = connect;
+     
+    var login  = document.getElementById("login");
+    var gamepad = document.getElementById("gamepad");
+     
+    var moveRight = false;
+    var moveLeft = false;
+    var moveUp = false;
+    var moveDown = false;
+    
+    //KEYS
+    var right = document.getElementById("right");
+    var left = document.getElementById("left");
+    var up = document.getElementById("up");
+    var down = document.getElementById("down");
+    
+    var keys = [up,down,left,right];
+    for(var k=0;k<keys.length;k++){
+        keys[k].addEventListener("touchstart", onTouch);
+        keys[k].addEventListener("touchend", onRelease);
+    }
+    
+    
+    
+    
+    function onTouch(event) {
+        event.preventDefault();
+        switch(event.target.id){
+            case "right":
+                moveRight = true;
+                break;
+            case "left":
+                 moveLeft = true;
+                break;
+            case "up":
+                 moveUp = true;
+                break;
+            case "down":
+                 moveDown = true;
+                break;
+        }
+         update();
+        
+    }
+    
+    function onRelease(event) {
+        event.preventDefault();
+         switch(event.target.id){
+            case "right":
+                moveRight = false;
+                break;
+            case "left":
+                 moveLeft = false;
+                break;
+            case "up":
+                 moveUp = false;
+                break;
+            case "down":
+                 moveDown = false;
+                break;
+        }
+         update();
+    }
+    
+    
+    
+
+     var socket 
+     //connect
+     function connect(){
+        console.log(input.value);
+   
+        if (input.value!="") {
+            socket =io();
+            socket.emit('connect mobile',{user:input.value});
+            
+            //show gamepad
+            login.style.display = "none";
+            gamepad.style.display = "block";
+            
+            //dissconnected screen
+         
+            
+             socket.on("screen disconnected",function(){
+                //alert("screen disconnected");
+                login.style.display = "block";
+                gamepad.style.display = "none";
+             });
+             
+             //CHANGE COLOR
+             socket.on("on color",function(color){
+                gamepad.style.backgroundColor=color;
+                
+             })
+             
+             /*
+             socket.on("on color",function(color){
+                alert("on color!"+color)
+             })*/
+            
+        }
+     }
+     
+    
+     
+     function update(){
+        socket.emit('update',{direction:{up:moveUp,down:moveDown,left:moveLeft,right:moveRight}});
+     }
+     
+    </script>
+    
+  </body>
+</html>

@@ -9,12 +9,13 @@
         margin:0;
         padding:0;
         font-family: arial;
+        overflow: hidden;
       }
       
       #output{
         width:400px;
         height:100%;
-        overflow-y: scroll;
+        overflow-y: auto;
         background-color:#333;
         color:#fff;
         position: absolute;
@@ -32,6 +33,17 @@
         
       }
       
+      #users{
+        width:100%;
+        float: left;
+        display:block;
+      }
+      #bullets{
+        width:100%;
+        float: left;
+        display:block;
+      }
+      
       
     </style>
   </head>
@@ -41,7 +53,8 @@
     </div>
     
     <div id="output">
-      
+      <div id="bullets"></div>
+      <div id="users"></div>
     </div>
     
     <!--SOCKET-->
@@ -51,27 +64,39 @@
    
       
       var output = document.getElementById("output");
+      var bullets = document.getElementById("bullets");
+      var users = document.getElementById("users");
+      
+      
       var players = [];
       var game =  document.getElementById("game")
       var canvas;
       var context;
       var screenWidth = 800;
       var screenHeight = 600;
-      var backgroundColor = "#9ea7b8";
-      var playerHeight=50;
-      var playerWidth=50;
+      var backgroundColor = "#000000";
+      var playerHeight=20;
+      var playerWidth=20;
       var speed = 10;
       var fps = 60;
       var ball = {};
       var ballSize = 10;
+      var bulletSize = 4;
+      var bulletSpeed =10;
+      var bullets = [];
+      var bulletDelay = 5;
+      var cannonWidth = 30;
+      var cannonHeight = 6;
       
        ball.x = screenWidth-ballSize;
           ball.y = 0;
           ball.xspeed = 5;
           ball.yspeed = 5;
       
+       window.addEventListener("resize", onResize);
+      
       function debug(str){
-        output.innerHTML+=str+"</br>";
+        users.innerHTML+=str+"</br>";
       }
       
       function onResize() {
@@ -81,12 +106,12 @@
         //console.log(output.offsetWidth)
         
       }
-      
-      
-      
-      window.addEventListener("resize", onResize);
+     
       
       onResize();
+      
+      
+     
       
       
       canvas = document.createElement('canvas');
@@ -100,6 +125,7 @@
       context.fillStyle = backgroundColor;
       context.fillRect(0,0,screenWidth,screenHeight);
       
+  
       
       //########################################
       //SOCKET
@@ -118,13 +144,18 @@
           player.id = data.id;
           player.username = data.username;
           player.color = data.color;
-          player.x = 0;
-          player.y = 0;
+          player.x = playerWidth;
+          player.y = playerHeight;
           player.speed = speed;
           player.moveup = false;
           player.moveleft=  false;
           player.moveright = false;
           player.movedown=false;
+          player.fire = false;
+          player.delay = bulletDelay;
+          player.angle = 0;
+          player.health = 10;
+         
           players.push(player);
           
           
@@ -155,6 +186,7 @@
       //UPDATE
       socket.on("update",function(user,data){
         //debug("update"+user.username+": up "+data.direction.up+"| down "+data.direction.down+"| left "+data.direction.left+"| right"+data.direction.right);
+        debug("update"+user.username+": fire "+data.direction.fire);
         if (players.length>0) {
           
        
@@ -165,6 +197,7 @@
               player.movedown = data.direction.down;
               player.moveleft = data.direction.left;
               player.moveright = data.direction.right;
+              player.fire = data.direction.fire;
             }
           }
         }
@@ -173,6 +206,7 @@
       
       //var interval = setInterval(loop,1000/fps);
       //http://robots.thoughtbot.com/pong-clone-in-javascript
+      //https://yinyangit.wordpress.com/2012/03/02/html5-canvas-game-xe-tang-don-gian-part-1/
       var animate = window.requestAnimationFrame ||
       window.webkitRequestAnimationFrame ||
       window.mozRequestAnimationFrame ||
@@ -183,65 +217,98 @@
       
       function loop(args) {
         
+        users.innerHTML = bullets.length;
+        
+        canvas.width = screenWidth;
+        canvas.height = screenHeight;
         context.clearRect ( 0 , 0 , screenWidth, screenHeight );
         context.fillStyle = backgroundColor;
         context.fillRect(0,0,screenWidth,screenHeight);
         
+        //BULLETS
         
-        //BALL
-          ball.x += ball.xspeed;
-          ball.y += ball.yspeed;
-          
-          if (ball.x<0) {
-             ball.x = 0;
-             ball.xspeed = -ball.xspeed
-          }else if (ball.x>screenWidth) {
-            ball.x = screenWidth;
-            ball.xspeed = -ball.xspeed
-            //code
-          }
-          
-          if (ball.y>screenHeight) {
-            ball.y = screenHeight;
-            ball.yspeed = -ball.yspeed
-          }else if (ball.y<0) {
-           
-            ball.y = 0;
-            ball.yspeed = -ball.yspeed
-          
-          }
-          
-          
-          
+        for(var b= 0;b<bullets.length;b++){
+          //*Math.PI/180
+         
+         var currentBullet = bullets[b]
+         
+          var directionX = Math.cos( currentBullet.angle*Math.PI/180);
+          var directionY = Math.sin( currentBullet.angle*Math.PI/180);
+         
+          currentBullet.x +=directionX*currentBullet.xspeed;
+          currentBullet.y +=directionY*currentBullet.yspeed;
+
           context.beginPath();
-          context.rect(ball.x, ball.y, ballSize, ballSize);
-          context.fillStyle = "#000000";
+          context.rect(currentBullet.x, currentBullet.y, bulletSize, bulletSize);
+          context.fillStyle = currentBullet.color;
           context.fill();
+          
+          
+          if ((currentBullet.x>screenWidth) || (currentBullet.x<0) ||(currentBullet.y>screenHeight)||(currentBullet.y<0)){
+            bullets.splice(b,1);
+           
+          }
+          
+          //CHECK PLAYER COLLISION
+          for(var p=0;p<players.length;p++){
+            if (((currentBullet.x >players[p].x-playerWidth)&&(currentBullet.x <players[p].x+playerWidth))&&((currentBullet.y >players[p].y-playerHeight)&&(currentBullet.y <players[p].y+playerHeight))){
+              //code
+              //not hit by own bullets
+              if (currentBullet.id != players[p].id) {
+                console.log("hit!");
+                 bullets.splice(b,1);//remove bullet
+                 players[p].health--;
+                 if(players[p].health<0){
+                  players[p].health = 0;
+                  players.splice(i,1);
+                 }
+                
+              }
+              
+            }
+          }
+          
+        }
+       
+       //console.log(bullets.length)
+        
+        
         
         //PLAYERS
         if (players.length>0) {
          for(var i = 0;i<players.length;i++){
           var player = players[i];
-          
-          //player.speed--;
-          if (player.speed<0) {
-            player.speed = 0;
+          player.delay--;
+          if (player.delay<0) {
+            player.delay = 0;
           }
+         
+          
+        
+         
+         
+      
           
           //UPDATE POSITION
           if (player.moveright) {
             player.x +=player.speed;
+            player.angle = 0;
           }else if (player.moveleft) {
              player.x -=player.speed;
+             player.angle = 180;
+             
+             
           }else if (player.moveup) {
             player.y -=player.speed;
+             player.angle = 270;
           }else if ( player.movedown) {
             player.y +=player.speed;
+             player.angle = 90;
           }
           
           //COLLISION DETECTION
-          if (player.y<0) {
-            player.y =0;
+          if (player.y<playerHeight) {
+            player.y =playerHeight;
           }
           if (player.y>screenHeight-playerHeight) {
             player.y = screenHeight-playerHeight;
@@ -249,15 +316,62 @@
           if (player.x>screenWidth-playerWidth) {
             player.x = screenWidth-playerWidth;
           }
-          if (player.x<0) {
-            player.x = 0;
+          if (player.x<playerWidth) {
+            player.x = playerWidth;
           }
           
+          
+           //FIRE
+          if ((player.fire) &&(player.delay == 0)){
+            var bullet = {};
+            bullet.x = player.x-(bulletSize/2);
+            bullet.y = player.y-(bulletSize/2);// +(playerHeight*.5);
+            bullet.id = player.id;
+            bullet.angle = player.angle;
+            bullet.xspeed = 10;
+            bullet.yspeed = 10;
+            bullet.color = player.color;
+            bullets.push(bullet);
+            player.delay = bulletDelay;
+          }
+          
+          
+          
+          
           //DRAW PLAYER
+          /*
           context.beginPath();
           context.rect(players[i].x, players[i].y, playerWidth, playerHeight);
           context.fillStyle = players[i].color;
+          context.fill();*/
+          
+          //PLAYER
+          context.beginPath();
+          context.fillStyle = players[i].color;
+          context.arc(players[i].x,players[i].y,playerWidth,0,Math.PI*2,true);
+          context.closePath();
           context.fill();
+          
+          
+          //CANNON
+          context.save();
+          context.translate(player.x,player.y);
+          context.rotate(player.angle*Math.PI/180);
+          context.beginPath();
+          context.fillStyle = players[i].color;
+          context.rect(0,-cannonHeight/2,cannonWidth,cannonHeight);
+          context.closePath();
+          context.fill();
+          context.restore();
+          
+          //CENTER   
+          context.beginPath();
+          context.fillStyle = "#ffffff";
+          context.arc(player.x,player.y,14/2,0,Math.PI*2,true);
+          context.closePath();
+          context.fill();
+          
+          
          }
         }
         animate(loop)

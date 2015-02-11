@@ -6,13 +6,16 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"/>
     <style>
         *{
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+           
         }
+        
+          html {
+            box-sizing: border-box;
+          }
+          *, *:before, *:after {
+            box-sizing: inherit;
+          }
+        
         html,body{
             font-family: arial;
             width:100%;
@@ -25,6 +28,7 @@
             width:100%;
             height:100%;
             display: block;
+            padding:20px;
         }
         #gamepad{
             background-color:#fff;
@@ -55,7 +59,68 @@
             text-align: center;
             line-height: 80px;
             display: block;
+            
+             -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
+        
+          .arrow{
+            position: absolute;
+            top:50%;
+            left:50%;
+            
+          
+          }
+        
+        .arrow-up {
+                width: 0; 
+                height: 0; 
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-bottom: 6px solid #ffffff;
+                margin-left:-6px;
+                margin-top:-3px;
+                
+        }
+
+        .arrow-down {
+                width: 0; 
+                height: 0; 
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                
+                border-top: 6px solid #ffffff;
+               margin-left:-6px;
+                margin-top:0px;
+        }
+        
+        .arrow-right {
+                width: 0; 
+                height: 0; 
+                border-top: 6px solid transparent;
+                border-bottom: 6px solid transparent;
+                
+                border-left: 6px solid #ffffff;
+                  margin-left:0px;
+                margin-top:-6px;
+                
+        }
+        
+        .arrow-left {
+                width: 0; 
+                height: 0; 
+                border-top: 6px solid transparent;
+                border-bottom: 6px solid transparent; 
+                
+                border-right:6px solid #ffffff;
+                 margin-left:-6px;
+                margin-top:-6px;
+        }
+        
         
         #up,#down{
             
@@ -82,21 +147,65 @@
         }
         
         
+        #fire{
+          
+          height:80px;
+          background-color:#000000;
+          color:#fff;
+          line-height: 80px;
+          position: absolute;
+          bottom:20px;
+          left:20px;
+          right:20px;
+          font-size: 18px;
+          text-align: center;
+          
+        }
+        
+        
+       
+        input[type=text], input[type=url], input[type=email], input[type=password], input[type=tel] {
+          -webkit-appearance: none; -moz-appearance: none;
+          display: block;
+          margin: 0;
+          width: 100%; height: 40px;
+          line-height: 40px; font-size: 18px;
+          border: 1px solid #bbb;
+          padding:10px;
+        }
+        
+        #submit{
+          width:100%;
+          height:40px;
+          background-color:#81ad29;
+          color:#ffffff;
+          line-height: 40px;
+          font-size: 18px;
+          text-align: center;
+          display: block;
+          margin-top:20px;
+        }
+        
+        
     </style>   
         
   </head>
   <body>
     
     <div id="login">
-        <input id="input" autocomplete="false" placeholder="username"/>
-        <button id="submit">submit</button>
+        <input id="input" type="text" autocomplete="false" placeholder="username"/>
+        <div id="submit">submit</div>
     </div>
     <div id="gamepad">
         <div class="button-holder">
-            <div class="gamepad-button" id="up">up</div>
-            <div class="gamepad-button" id="down">down</div>
-            <div class="gamepad-button"  id="left">left</div>
-            <div class="gamepad-button" id="right">right</div>
+            <div class="gamepad-button" id="up"><div class="arrow arrow-up"></div></div>
+            <div class="gamepad-button" id="down"><div class="arrow arrow-down"></div></div>
+            <div class="gamepad-button"  id="left"><div class="arrow arrow-left"></div></div>
+            <div class="gamepad-button" id="right"><div class="arrow arrow-right"></div></div>
+        </div>
+        
+        <div id="fire">
+          fire!
         </div>
     </div>
     
@@ -119,14 +228,17 @@
     var moveLeft = false;
     var moveUp = false;
     var moveDown = false;
+    var fireBullet = false;
+    
     
     //KEYS
     var right = document.getElementById("right");
     var left = document.getElementById("left");
     var up = document.getElementById("up");
     var down = document.getElementById("down");
+    var fire = document.getElementById("fire");
     
-    var keys = [up,down,left,right];
+    var keys = [up,down,left,right,fire];
     for(var k=0;k<keys.length;k++){
         keys[k].addEventListener("touchstart", onTouch);
         keys[k].addEventListener("touchend", onRelease);
@@ -135,9 +247,15 @@
     
     
     
+    
+    
+    
     function onTouch(event) {
         event.preventDefault();
         switch(event.target.id){
+            case "fire":
+               fireBullet = true;
+               break;
             case "right":
                 moveRight = true;
                 break;
@@ -151,6 +269,8 @@
                  moveDown = true;
                 break;
         }
+        
+        
          update();
         
     }
@@ -158,6 +278,9 @@
     function onRelease(event) {
         event.preventDefault();
          switch(event.target.id){
+           case "fire":
+               fireBullet = false;
+               break;
             case "right":
                 moveRight = false;
                 break;
@@ -171,6 +294,7 @@
                  moveDown = false;
                 break;
         }
+        
          update();
     }
     
@@ -205,10 +329,7 @@
                 
              })
              
-             /*
-             socket.on("on color",function(color){
-                alert("on color!"+color)
-             })*/
+             
             
         }
      }
@@ -216,7 +337,7 @@
     
      
      function update(){
-        socket.emit('update',{direction:{up:moveUp,down:moveDown,left:moveLeft,right:moveRight}});
+        socket.emit('update',{direction:{up:moveUp,down:moveDown,left:moveLeft,right:moveRight,fire:fireBullet}});//change
      }
      
     </script>

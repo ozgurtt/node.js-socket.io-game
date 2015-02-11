@@ -67,7 +67,7 @@ io.on('connection',function(socket){
         users.push(user);//add to users
         
         screen.emit("add user",user);//send to screen
-        socket.emit("on color",color)
+        socket.emit("on color",color);//send to user
         console.log("mobile user connected : "+data.user+" | "+socket.id);
     
 

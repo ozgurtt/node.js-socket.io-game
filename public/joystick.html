@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Page Title</title>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"/>
+    <style>
+        html, body {
+            height: 100%;
+            margin:0;
+            padding:0;
+            
+            font-family: arial;
+          }
+          #output{
+            position: absolute;
+            top:0;
+            left:0;
+          }
+         
+    </style>
+    
+    
+    
+    
+</head>
+
+<body>
+<div id="canvas"></div>
+<div id="pointer"></div>
+<div id="output"></div>
+<script>
+    
+    //http://jsfiddle.net/jessefreeman/rM46q/1/
+        var canvas;
+        var context;
+        
+        var padRadius;
+        var stickRadius;
+        
+        var stickX = 0;
+        var stickY = 0;
+        var centerX = 0;
+        var centerY = 0;
+        
+        var backgroundColor = "#cccccc";
+        var padColor = "#eeeeee";
+        var stickColor = "#666666";
+       
+       var output = document.getElementById("output"); 
+        
+        //CREATE CANVAS
+        canvas = document.createElement('canvas');
+        canvas.id = 'canvas';
+        document.body.appendChild(canvas);  
+        
+        //GET CONTEXT
+        context = canvas.getContext('2d');
+       
+        
+        //TOUCH
+        canvas.addEventListener("touchstart", onTouch);
+        canvas.addEventListener("touchmove", onTouch);
+        canvas.addEventListener("touchend", onRelease);
+        
+        //MOUSE
+        canvas.onmousemove = function (e) {
+            stickX = e.offsetX;
+            stickY = e.offsetY;
+        }
+        canvas.onmouseout = function (e) {
+           stickX = centerX;
+            stickY = centerY;
+        }
+        
+        //RESIZE
+        window.addEventListener("resize", onResize);
+        function onResize() {
+            if (window.innerHeight<window.innerWidth) {
+                canvasWidth = window.innerHeight;
+               
+            }else{
+                canvasWidth = window.innerWidth;
+            }
+            
+           
+            
+            canvasHeight =  canvasWidth;
+            stickRadius = (canvasWidth/2)*.2;
+            padRadius = (canvasWidth/2)-stickRadius;
+            
+            centerX = canvasWidth/2;
+            centerY = canvasWidth/2;
+            
+            stickX = centerX;
+            stickY = centerY;
+            
+        }
+        onResize();
+
+        //TOUCH
+        function onTouch(event) {
+            event.preventDefault();
+            
+            
+            //update(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
+            stickX = event.changedTouches[0].pageX;
+            stickY = event.changedTouches[0].pageY;
+            
+        }
+        //RELEASE
+        function onRelease(event) {
+            event.preventDefault();
+            stickX = centerX;
+            stickY = centerY;
+        }
+        
+        
+        var animate = window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        function(callback) { window.setTimeout(callback, 1000/60) };
+      
+        animate(update)
+       
+        
+        // Loop
+       // setInterval(onTimerTick, 33);
+        
+        // Render Loop
+        function update() {
+        
+            //REDRAW CANVAS
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            context.fillStyle = backgroundColor;
+            context.fillRect(0,0,canvasWidth,canvasHeight);
+            
+            
+            //DRAW PAD
+            context.beginPath();
+            context.arc(centerX, centerY, padRadius, 0, 2 * Math.PI, false);
+            context.fillStyle = padColor;
+            context.fill();
+        
+            // GET POIT FOR STICK;
+            var newPoint = limit(centerX, centerY, stickX, stickY, padRadius);
+        
+            //STICK
+            context.beginPath();
+            context.arc(newPoint.x, newPoint.y, stickRadius, 0, 2 * Math.PI, false);
+            context.fillStyle = stickColor;
+            context.fill();
+            
+            //DEBUG
+            output.innerHTML = "horizontal : " +Math.round(newPoint.x-centerX)+" vertical : "+Math.round(newPoint.y-centerY);
+            
+            //LOOP
+            animate(update)
+        }
+        
+        
+        
+        function limit(x1, y1, x2, y2, radius) {
+        
+            // the vector between the two points
+            var dx = x2 - x1,
+                dy = y2 - y1,
+                distanceSquared = (dx * dx) + (dy * dy);
+            if (distanceSquared <= radius * radius) {
+                return {
+                    x: x2,
+                    y: y2,
+                    dist: radius
+                };
+            } else {
+                var distance = Math.sqrt(distanceSquared),
+                    ratio = radius / distance;
+        
+                return {
+                    x: (dx * ratio) + x1,
+                    y: (dy * ratio) + y1,
+                    dist: radius
+                };
+            }
+        }
+    </script>
+
+</body>
+</html>

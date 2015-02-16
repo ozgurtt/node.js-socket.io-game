@@ -101,7 +101,16 @@ io.on('connection',function(socket){
       }
       
     })
-   
+    
+    //MOVE (JOYSTICK)
+   socket.on('move',function(data){
+      var userIndex = getUser(socket.id);
+      if (userIndex!=null) {
+        console.log("move : "+users[userIndex]);
+        screen.emit("move",users[userIndex],data);//send to screen
+      }
+      
+    })
     
     
     

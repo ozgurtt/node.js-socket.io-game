@@ -77,7 +77,7 @@
       var backgroundColor = "#000000";
       var playerHeight=20;
       var playerWidth=20;
-      var speed = 10;
+      var speed = 50;
       var fps = 60;
       var ball = {};
       var ballSize = 10;
@@ -203,6 +203,35 @@
         }
       })
       
+      //MOVE (JOYSTICK)
+      socket.on("move",function(user,data){
+        //debug("update"+user.username+": up "+data.direction.up+"| down "+data.direction.down+"| left "+data.direction.left+"| right"+data.direction.right);
+        debug("move"+user.username+": fire "+data.direction.fire);
+        if (players.length>0) {
+          
+       
+          for(var i = 0;i<players.length;i++){
+            var player = players[i];
+            if (player.id == user.id) {
+              /*player.moveup = data.direction.up;
+              player.movedown = data.direction.down;
+              player.moveleft = data.direction.left;
+              player.moveright = data.direction.right;
+              player.fire = data.direction.fire;*/
+              player.angle = data.direction.angle;
+              //console.log(data.direction.angle)
+              
+              var ypos = Math.sin(data.direction.angle)*(data.direction.y/speed);
+              var xpos = Math.cos(data.direction.angle)*(data.direction.x/speed);
+           
+              
+              player.x += xpos;
+              player.y += ypos;
+            }
+          }
+        }
+      })
+      
       
       //var interval = setInterval(loop,1000/fps);
       //http://robots.thoughtbot.com/pong-clone-in-javascript
@@ -260,7 +289,7 @@
                  players[p].health--;
                  if(players[p].health<0){
                   players[p].health = 0;
-                  players.splice(p,1);//remove player
+                  players.splice(p,1);
                  }
                 
               }
@@ -270,7 +299,10 @@
           
         }
        
-
+       //console.log(bullets.length)
+        
+        
+        
         //PLAYERS
         if (players.length>0) {
          for(var i = 0;i<players.length;i++){
@@ -287,6 +319,7 @@
       
           
           //UPDATE POSITION
+          /*
           if (player.moveright) {
             player.x +=player.speed;
             player.angle = 0;
@@ -301,7 +334,7 @@
           }else if ( player.movedown) {
             player.y +=player.speed;
              player.angle = 90;
-          }
+          }*/
           
           //COLLISION DETECTION
           if (player.y<playerHeight) {
@@ -353,7 +386,8 @@
           //CANNON
           context.save();
           context.translate(player.x,player.y);
-          context.rotate(player.angle*Math.PI/180);
+          //context.rotate(player.angle*Math.PI/180);
+          context.rotate(player.angle)
           context.beginPath();
           context.fillStyle = players[i].color;
           context.rect(0,-cannonHeight/2,cannonWidth,cannonHeight);

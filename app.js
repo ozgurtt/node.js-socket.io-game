@@ -96,7 +96,7 @@ io.on('connection',function(socket){
     socket.on('update',function(data){
       var userIndex = getUser(socket.id);
       if (userIndex!=null) {
-        console.log("update : "+users[userIndex]);
+        //console.log("update : "+users[userIndex]);
         screen.emit("update",users[userIndex],data);//send to screen
       }
       
@@ -106,11 +106,19 @@ io.on('connection',function(socket){
    socket.on('move',function(data){
       var userIndex = getUser(socket.id);
       if (userIndex!=null) {
-        console.log("move : "+users[userIndex]);
+       console.log("move : "+users[userIndex]);
         screen.emit("move",users[userIndex],data);//send to screen
       }
       
-    })
+    });
+   
+   socket.on("fire",function(data){
+    var userIndex = getUser(socket.id);
+      if (userIndex!=null) {
+       console.log("fire : "+users[userIndex]);
+        screen.emit("fire",users[userIndex],data);//send to screen
+      }
+   })
     
     
     

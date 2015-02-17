@@ -65,14 +65,16 @@
     socket.emit('connect mobile',{user:"ws"});
      socket.on("on color",function(color){
                 backgroundColor=color;
-                update();
+                //update();
                 
              })
         
         var canvas;
         var context;
         
-
+        var tension =  .5;
+        var xspeed = 0;
+        var yspeed = 0;
         var padRadius;
         var stickRadius;
         
@@ -85,27 +87,29 @@
         var backgroundColor = "#cccccc";
         var padColor = "#eeeeee";
         var stickColor = "#666666";
-       var dragging = false;
+        var dragging = false;
         var output = document.getElementById("output"); 
-         var fire = document.getElementById("fire");
-         var keys = [fire];
+        var fire = document.getElementById("fire");
+        var keys = [fire];
        
         fire.addEventListener("touchstart", onFire);
         fire.addEventListener("touchend", onFireRelease);
         function onFire(event) {
          event.preventDefault();
           fireBullet = true;
+           socket.emit('fire',{fire:fireBullet});//change
         }
         function onFireRelease(event) {
          event.preventDefault();
           fireBullet = false;
+          socket.emit('fire',{fire:fireBullet});//change
         }
          
          
         //CREATE CANVAS
         canvas = document.createElement('canvas');
         canvas.id = 'canvas';
-        document.getElementById("pad").appendChild(canvas);  
+        document.body.appendChild(canvas);  
         
         //GET CONTEXT
         context = canvas.getContext('2d');
@@ -162,7 +166,7 @@
             stickX = event.changedTouches[0].pageX;
             stickY = event.changedTouches[0].pageY;
             
-            //update();
+           //update();
             
             
         }
@@ -170,19 +174,19 @@
         function onRelease(event) {
             event.preventDefault();
             dragging = false;
-            stickX = centerX;
-            stickY = centerY;
+            //stickX = centerX;
+            //stickY = centerY;
             //update();
         }
         
-        //update();
+       // update();
          
         var animate = window.requestAnimationFrame ||
         window.webkitRequestAnimationFrame ||
         window.mozRequestAnimationFrame ||
-        function(callback) { window.setTimeout(callback, 1000/60) };
+        function(callback) { window.setTimeout(callback, 1000) };
       
-        animate(update)
+      animate(update)
        
         
         // Loop
@@ -215,13 +219,7 @@
             
             //DEBUG
             //angle = Math.atan2(newPoint.y-centerY,newPoint.x-centerX)/(Math.PI/180);
-            var dx = newPoint.x-centerX;
-            var dy = newPoint.y-centerY;
-            angle = Math.atan2(dy,dx);
-            
-            
-            
-            output.innerHTML = "horizontal : " +Math.round((newPoint.x-centerX))+" vertical : "+Math.round((newPoint.y-centerY))+"angle : "+angle;
+           
             
             
            // moveY = Math.sin(angle*(Math.PI/180));
@@ -230,16 +228,28 @@
             //moveX = Math.cos(angle*(Math.PI/180))*(newPoint.x/8);
            
             if (dragging) {
-                socket.emit('move',{direction:{x:newPoint.x,y:newPoint.y,angle:angle}});//change
-                lastAngle = angle;
+                var dx = newPoint.x-centerX;
+                var dy = newPoint.y-centerY;
+                angle = Math.atan2(dy,dx);
+            
+            
+            
+                //output.innerHTML = "horizontal : " +Math.round(Math.abs(newPoint.x/centerX)*100)+" vertical : "+Math.round(Math.abs(newPoint.y/centerY)*100)+"angle : "+angle;
+                output.innerHTML = "horizontal : " +Math.abs(newPoint.x/centerX)+" vertical : "+Math.abs(newPoint.y/centerY)+"angle : "+angle;
+                socket.emit('move',{direction:{x:newPoint.x/centerX,y:newPoint.y/centerY,angle:angle}});//change
+                //lastAngle = angle;
             }else{
-                socket.emit('move',{direction:{x:newPoint.x,y:newPoint.y,angle:lastAngle}});//change
+                
+                stickX = centerX;
+                stickY = centerY;
+                //socket.emit('move',{direction:{x:newPoint.x,y:newPoint.y,angle:lastAngle}});//change
+                
             }
             
             
             
             //LOOP
-            //animate(update)
+            animate(update)
         }
         
         

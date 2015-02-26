@@ -1,3 +1,7 @@
+/*DOCS
+http://ejohn.org/blog/accuracy-of-javascript-time/
+http://stackoverflow.com/questions/4071258/how-can-i-find-the-response-time-latency-of-a-client-in-nodejs-with-sockets-s
+*/
 //SETTINGS
 var port = 3000;
 var express = require('express');
@@ -46,9 +50,6 @@ io.on('connection',function(socket){
       console.log("screen connected : "+data.screen);
       screen = socket;//set screen socket
       screenId = socket.id;
-      
-      
-    
     });
     
     
@@ -69,11 +70,16 @@ io.on('connection',function(socket){
         screen.emit("add user",user);//send to screen
         socket.emit("on color",color);//send to user
         console.log("mobile user connected : "+data.user+" | "+socket.id);
-    
+        
+        
 
      
     });
     
+    //PING
+    socket.on('ping', function() {
+      socket.emit('pong');
+    });
     
     
     function getUser(id){
@@ -96,29 +102,12 @@ io.on('connection',function(socket){
     socket.on('update',function(data){
       var userIndex = getUser(socket.id);
       if (userIndex!=null) {
-        //console.log("update : "+users[userIndex]);
+        console.log("update : "+users[userIndex]);
         screen.emit("update",users[userIndex],data);//send to screen
       }
       
     })
-    
-    //MOVE (JOYSTICK)
-   socket.on('move',function(data){
-      var userIndex = getUser(socket.id);
-      if (userIndex!=null) {
-       console.log("move : "+users[userIndex]);
-        screen.emit("move",users[userIndex],data);//send to screen
-      }
-      
-    });
    
-   socket.on("fire",function(data){
-    var userIndex = getUser(socket.id);
-      if (userIndex!=null) {
-       console.log("fire : "+users[userIndex]);
-        screen.emit("fire",users[userIndex],data);//send to screen
-      }
-   })
     
     
     

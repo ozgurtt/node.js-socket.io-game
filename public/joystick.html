@@ -17,26 +17,11 @@
             top:0;
             left:0;
           }
-          
-          #pad{
-            float:left;
-            
-          }
-          #fire{
-            float: left;
-            height:80px;
-            background-color:#000000;
-            color:#fff;
-            line-height: 80px;
+          #ping{
             position: absolute;
-            bottom:20px;
-            left:20px;
-            right:20px;
-            font-size: 18px;
-            text-align: center;
+            bottom:0;
+            left:0;
           }
-       
-          
          
     </style>
     
@@ -46,35 +31,17 @@
 </head>
 
 <body>
-
-
-<div id="pad"></div>
- <div id="fire">
-    fire!
-  </div>
+<div id="canvas"></div>
+<div id="pointer"></div>
 <div id="output"></div>
- <script src="/socket.io/socket.io.js"></script>
+<div id="ping"></div>
 <script>
-      
+    
     //http://jsfiddle.net/jessefreeman/rM46q/1/
     //http://johnstejskal.com/wp/virtual-joystick-for-mobile-games-using-as3/
-        //SOCKET
-         var socket
-       
-       socket =io();
-    socket.emit('connect mobile',{user:"ws"});
-     socket.on("on color",function(color){
-                backgroundColor=color;
-                //update();
-                
-             })
-        
         var canvas;
         var context;
         
-        var tension =  .5;
-        var xspeed = 0;
-        var yspeed = 0;
         var padRadius;
         var stickRadius;
         
@@ -82,30 +49,13 @@
         var stickY = 0;
         var centerX = 0;
         var centerY = 0;
-        var angle = 0;
-        var lastAngle = 0;
+        
         var backgroundColor = "#cccccc";
         var padColor = "#eeeeee";
         var stickColor = "#666666";
-        var dragging = false;
-        var output = document.getElementById("output"); 
-        var fire = document.getElementById("fire");
-        var keys = [fire];
        
-        fire.addEventListener("touchstart", onFire);
-        fire.addEventListener("touchend", onFireRelease);
-        function onFire(event) {
-         event.preventDefault();
-          fireBullet = true;
-           socket.emit('fire',{fire:fireBullet});//change
-        }
-        function onFireRelease(event) {
-         event.preventDefault();
-          fireBullet = false;
-          socket.emit('fire',{fire:fireBullet});//change
-        }
-         
-         
+       var output = document.getElementById("output"); 
+        var ping = document.getElementById("ping");
         //CREATE CANVAS
         canvas = document.createElement('canvas');
         canvas.id = 'canvas';
@@ -113,6 +63,7 @@
         
         //GET CONTEXT
         context = canvas.getContext('2d');
+       
         
         //TOUCH
         canvas.addEventListener("touchstart", onTouch);
@@ -128,7 +79,6 @@
            stickX = centerX;
             stickY = centerY;
         }
-        
         
         //RESIZE
         window.addEventListener("resize", onResize);
@@ -152,41 +102,33 @@
             stickX = centerX;
             stickY = centerY;
             
-           
-            
         }
         onResize();
 
         //TOUCH
         function onTouch(event) {
             event.preventDefault();
-            dragging = true;
+            
             
             //update(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
             stickX = event.changedTouches[0].pageX;
             stickY = event.changedTouches[0].pageY;
             
-           //update();
-            
-            
         }
         //RELEASE
         function onRelease(event) {
             event.preventDefault();
-            dragging = false;
-            //stickX = centerX;
-            //stickY = centerY;
-            //update();
+            stickX = centerX;
+            stickY = centerY;
         }
         
-       // update();
-         
+        
         var animate = window.requestAnimationFrame ||
         window.webkitRequestAnimationFrame ||
         window.mozRequestAnimationFrame ||
-        function(callback) { window.setTimeout(callback, 1000) };
+        function(callback) { window.setTimeout(callback, 1000/60) };
       
-      animate(update)
+        animate(update)
        
         
         // Loop
@@ -218,41 +160,21 @@
             context.fill();
             
             //DEBUG
-            //angle = Math.atan2(newPoint.y-centerY,newPoint.x-centerX)/(Math.PI/180);
-           
-            
-            
-           // moveY = Math.sin(angle*(Math.PI/180));
-            //moveX = Math.cos(angle*(Math.PI/180));
-            //moveY = Math.sin(angle*(Math.PI/180))*(newPoint.x/8);
-            //moveX = Math.cos(angle*(Math.PI/180))*(newPoint.x/8);
-           
-            if (dragging) {
-                var dx = newPoint.x-centerX;
-                var dy = newPoint.y-centerY;
-                angle = Math.atan2(dy,dx);
-            
-            
-            
-                //output.innerHTML = "horizontal : " +Math.round(Math.abs(newPoint.x/centerX)*100)+" vertical : "+Math.round(Math.abs(newPoint.y/centerY)*100)+"angle : "+angle;
-                output.innerHTML = "horizontal : " +Math.abs(newPoint.x/centerX)+" vertical : "+Math.abs(newPoint.y/centerY)+"angle : "+angle;
-                socket.emit('move',{direction:{x:newPoint.x/centerX,y:newPoint.y/centerY,angle:angle}});//change
-                //lastAngle = angle;
-            }else{
-                
-                stickX = centerX;
-                stickY = centerY;
-                //socket.emit('move',{direction:{x:newPoint.x,y:newPoint.y,angle:lastAngle}});//change
-                
-            }
-            
-            
+            output.innerHTML = "horizontal : " +Math.round(newPoint.x-centerX)+" vertical : "+Math.round(newPoint.y-centerY);
             
             //LOOP
             animate(update)
         }
         
-        
+        //PING
+           /* setInterval(function() {
+                var startTime = Date.now();
+                socket.emit('ping');
+                socket.on('pong', function() {
+                  latency = Date.now() - startTime;
+                  ping.innerHTML = "ping : "+latency;
+                });
+            }, 2000);*/
         
         function limit(x1, y1, x2, y2, radius) {
         
@@ -277,9 +199,6 @@
                 };
             }
         }
-        
-        
-        
     </script>
 
 </body>
